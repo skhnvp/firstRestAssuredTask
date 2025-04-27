@@ -1,8 +1,6 @@
 package ru.stepup.restTests;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
 import ru.stepup.mockClasses.Student;
 
@@ -11,14 +9,11 @@ import static io.restassured.RestAssured.given;
 public class deleteStudentTest {
     static Student student = new Student((int) (Math.random() * 1000), "Ivan", 2, 3);
 
-    static ObjectMapper mapper = new ObjectMapper();
-
-    @SneakyThrows
     @BeforeAll
     static void createStudent() {
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(student))
+                .body(student)
                 .log().all()
                 .when()
                 .post("/student")
@@ -27,7 +22,6 @@ public class deleteStudentTest {
                 .statusCode(201);
     }
 
-    @SneakyThrows
     @Test
     @Order(1)
     void deleteStudentSuccessTest() {
@@ -42,7 +36,6 @@ public class deleteStudentTest {
                 .statusCode(200);
     }
 
-    @SneakyThrows
     @Test
     @Order(2)
     void deleteStudentFailTest() {

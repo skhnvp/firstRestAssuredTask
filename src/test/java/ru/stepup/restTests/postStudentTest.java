@@ -10,28 +10,30 @@ import ru.stepup.mockClasses.Student;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class postStudentTest {
     static Student student = new Student((int) (Math.random() * 1000), "Ivan", 2, 3);
     static Student studentWithoutId = new Student("Pete", 4, 5);
 
+    static Student updateStudent = new Student(999, "Pete", 2, 3);
+
     static ObjectMapper mapper = new ObjectMapper();
 
-//    @SneakyThrows
 //    @Test
 //    void createAndSaveIdStudentSuccessTest() {
-//        Integer idCreatedStudent = given()
+//        String idCreatedStudent = given()
 //                .contentType(ContentType.JSON)
-//                .body(mapper.writeValueAsString(student))
+//                .body(student)
 //                .log().all()
 //                .when()
 //                .post("/student")
 //                .then()
 //                .log().all()
 //                .statusCode(201)
-//                .extract().as(Integer.class);
-//        System.out.println(idCreatedStudent);
+//                .extract()
+//                .response()
+//                .asString();
+//        System.out.println("++=====" + idCreatedStudent);
 //    }
 
     @SneakyThrows
@@ -48,11 +50,13 @@ public class postStudentTest {
                 .statusCode(200);
 
         Student idStudent = given()
-                .pathParam("name", studentWithoutId.getName())
+                .queryParam("name", studentWithoutId.getName())
+                //.pathParam("name", studentWithoutId.getName())
                 .contentType(ContentType.JSON)
                 .log().all()
                 .when()
-                .get("/student?name={name}")
+                .get("/student")
+                //.get("/student?name={name}")
                 .then()
                 .log().all()
                 .statusCode(200)
@@ -69,15 +73,24 @@ public class postStudentTest {
                 .then()
                 .log().all()
                 .statusCode(200);
+
+        given()
+                .pathParam("id", updateStudent.getId())
+                .contentType(ContentType.JSON)
+                .log().all()
+                .when()
+                .delete("/student/{id}")
+                .then()
+                .log().all()
+                .statusCode(200);
     }
 
-    @SneakyThrows
     @Test
     @Order(1)
     void createStudentSuccessTest() {
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(student))
+                .body(student)
                 .log().all()
                 .when()
                 .post("/student")
@@ -86,30 +99,41 @@ public class postStudentTest {
                 .statusCode(201);
     }
 
-    @SneakyThrows
     @Test
     @Order(2)
     void UpdateStudentSuccessTest() {
-        for (int i = 0; i < 2; i++) {
-            given()
-                    .contentType(ContentType.JSON)
-                    .body(mapper.writeValueAsString(student))
-                    .log().all()
-                    .when()
-                    .post("/student")
-                    .then()
-                    .log().all()
-                    .statusCode(201);
-        }
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(student)
+                .log().all()
+                .when()
+                .post("/student")
+                .then()
+                .log().all()
+                .statusCode(201);
+
+        student.setName("Pete");
+        student.setMarks(List.of(5, 4, 3, 2));
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(student)
+                .log().all()
+                .when()
+                .post("/student")
+                .then()
+                .log().all()
+                .statusCode(201);
+
     }
 
-    @SneakyThrows
     @Test
     @Order(3)
     void createStudentWithoutIdSuccessTest() {
         Integer i = given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(studentWithoutId))
+                .body(studentWithoutId)
                 .log().all()
                 .when()
                 .post("/student")
@@ -121,7 +145,6 @@ public class postStudentTest {
         Assertions.assertNotNull(i);
     }
 
-    @SneakyThrows
     @Test
     @Order(4)
     void createStudentWithoutNameFailTest() {
@@ -131,7 +154,7 @@ public class postStudentTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(studentWithoutName))
+                .body(studentWithoutName)
                 .log().all()
                 .when()
                 .post("/student")
@@ -140,4 +163,30 @@ public class postStudentTest {
                 .statusCode(400);
     }
 
+    @Test
+    @Order(5)
+    void UpdateStudentWithoutNameSuccessTest() {
+        given()
+                .contentType(ContentType.JSON)
+                .body(updateStudent)
+                .log().all()
+                .when()
+                .post("/student")
+                .then()
+                .log().all()
+                .statusCode(201);
+
+        updateStudent.setName(null);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(updateStudent)
+                .log().all()
+                .when()
+                .post("/student")
+                .then()
+                .log().all()
+                .statusCode(404);
+
+    }
 }

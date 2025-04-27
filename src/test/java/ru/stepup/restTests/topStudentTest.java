@@ -1,22 +1,17 @@
 package ru.stepup.restTests;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import ru.stepup.mockClasses.Student;
 import ru.stepup.supportMethods.CheckEqualsStudent;
+
 import java.util.ArrayList;
 
 import static io.restassured.RestAssured.given;
 
-
 public class topStudentTest {
-    static ObjectMapper mapper = new ObjectMapper();
-
-    @SneakyThrows
     @Test
     @Order(1)
     void getTopStudentsWithoutStudentsSuccessTest() {
@@ -31,7 +26,6 @@ public class topStudentTest {
                 .statusCode(200);
     }
 
-    @SneakyThrows
     @Test
     @Order(2)
     void getTopStudentsWithoutMarksSuccessTest() {
@@ -39,7 +33,7 @@ public class topStudentTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(student))
+                .body(student)
                 .log().all()
                 .when()
                 .post("/student")
@@ -70,7 +64,6 @@ public class topStudentTest {
         }
     }
 
-    @SneakyThrows
     @Test
     @Order(3)
     void getTopStudentOneStudentSuccessTest() {
@@ -78,7 +71,7 @@ public class topStudentTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(student))
+                .body(student)
                 .log().all()
                 .when()
                 .post("/student")
@@ -87,7 +80,6 @@ public class topStudentTest {
                 .statusCode(201);
 
         try {
-
             ArrayList students = given()
                     .contentType(ContentType.JSON)
                     .log().all()
@@ -99,11 +91,7 @@ public class topStudentTest {
                     .statusCode(200)
                     .extract().as(ArrayList.class);
 
-            try {
-                CheckEqualsStudent.check(students.get(0), student);
-            } catch (NullPointerException e) {
-                throw new NullPointerException(e.getMessage());
-            }
+            CheckEqualsStudent.check(students.get(0), student);
         } finally {
             given()
                     .pathParam("id", student.getId())
@@ -117,7 +105,6 @@ public class topStudentTest {
         }
     }
 
-    @SneakyThrows
     @Test
     @Order(4)
     void getTopStudentMoreThanOneStudentSuccessTest() {
@@ -126,7 +113,7 @@ public class topStudentTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(studentMinAvgMarks))
+                .body(studentMinAvgMarks)
                 .log().all()
                 .when()
                 .post("/student")
@@ -136,7 +123,7 @@ public class topStudentTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(studentMaxAvgMarks))
+                .body(studentMaxAvgMarks)
                 .log().all()
                 .when()
                 .post("/student")
@@ -156,11 +143,8 @@ public class topStudentTest {
                     .statusCode(200)
                     .extract().as(ArrayList.class);
 
-            try {
-                CheckEqualsStudent.check(students.get(0), studentMaxAvgMarks);
-            } catch (NullPointerException e) {
-                throw new NullPointerException(e.getMessage());
-            }
+            CheckEqualsStudent.check(students.get(0), studentMaxAvgMarks);
+
         } finally {
             given()
                     .pathParam("id", studentMinAvgMarks.getId())
@@ -183,7 +167,6 @@ public class topStudentTest {
         }
     }
 
-    @SneakyThrows
     @Test
     @Order(5)
     void getTopStudentSameMarksStudentSuccessTest() {
@@ -192,7 +175,7 @@ public class topStudentTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(firstStudent))
+                .body(firstStudent)
                 .log().all()
                 .when()
                 .post("/student")
@@ -202,7 +185,7 @@ public class topStudentTest {
 
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(secondStudent))
+                .body(secondStudent)
                 .log().all()
                 .when()
                 .post("/student")
@@ -223,6 +206,10 @@ public class topStudentTest {
                     .extract().as(ArrayList.class);
 
             Assertions.assertEquals(2, students.size());
+
+            CheckEqualsStudent.check(students.get(0), firstStudent);
+            CheckEqualsStudent.check(students.get(1), secondStudent);
+
         } finally {
             given()
                     .pathParam("id", firstStudent.getId())
@@ -245,5 +232,65 @@ public class topStudentTest {
         }
     }
 
+    @Test
+    @Order(6)
+    void getTopStudentMaxCountOfMarksStudentSuccessTest() {
+        Student firstStudent = new Student(1, "Steve", 3, 5);
+        Student secondStudent = new Student(2, "Ben", 4, 4, 4);
 
+        given()
+                .contentType(ContentType.JSON)
+                .body(firstStudent)
+                .log().all()
+                .when()
+                .post("/student")
+                .then()
+                .log().all()
+                .statusCode(201);
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(secondStudent)
+                .log().all()
+                .when()
+                .post("/student")
+                .then()
+                .log().all()
+                .statusCode(201);
+
+        try {
+            ArrayList students = given()
+                    .contentType(ContentType.JSON)
+                    .log().all()
+                    .when()
+                    .get("/topStudent")
+                    .then()
+                    .log().all()
+                    .contentType(ContentType.JSON)
+                    .statusCode(200)
+                    .extract().as(ArrayList.class);
+
+            Assertions.assertEquals(1, students.size());
+            CheckEqualsStudent.check(students.get(0), secondStudent);
+        } finally {
+            given()
+                    .pathParam("id", firstStudent.getId())
+                    .contentType(ContentType.JSON)
+                    .log().all()
+                    .when()
+                    .delete("/student/{id}")
+                    .then()
+                    .log().all()
+                    .statusCode(200);
+            given()
+                    .pathParam("id", secondStudent.getId())
+                    .contentType(ContentType.JSON)
+                    .log().all()
+                    .when()
+                    .delete("/student/{id}")
+                    .then()
+                    .log().all()
+                    .statusCode(200);
+        }
+    }
 }

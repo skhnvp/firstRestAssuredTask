@@ -1,27 +1,21 @@
 package ru.stepup.restTests;
 
 import io.restassured.http.ContentType;
-
-import lombok.SneakyThrows;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import ru.stepup.BaseTest;
 import ru.stepup.mockClasses.Student;
 import ru.stepup.supportMethods.CheckEqualsStudent;
 
 import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class getStudentTest extends BaseTest {
-    static Student student = new Student((int)(Math.random() * 1000), "Ivan", 2, 3);
-    static ObjectMapper mapper = new ObjectMapper();
+    Student student = new Student((int) (Math.random() * 1000), "Ivan", 2, 3);
 
-    @SneakyThrows
     @BeforeEach
     void createStudent() {
         given()
                 .contentType(ContentType.JSON)
-                .body(mapper.writeValueAsString(student))
+                .body(student)
                 .log().all()
                 .when()
                 .post("/student")
@@ -58,7 +52,6 @@ public class getStudentTest extends BaseTest {
                 .statusCode(404);
     }
 
-    @SneakyThrows
     @Test
     @Order(2)
     void getStudentSuccessTest() {
